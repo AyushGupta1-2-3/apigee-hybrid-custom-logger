@@ -63,7 +63,7 @@ spec:
       - name: nas-storage
         # CHANGE THIS: Configure your NFS or other storage backend here.
         nfs:
-          server: <YOUR_NFS_SERVER_IP>
+          server: 10.172.239.194
           path: /vol1
       - name: config
         configMap:
