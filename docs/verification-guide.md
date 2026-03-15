@@ -120,3 +120,35 @@ kubectl logs -f <pod-name> -n platform-ops
 **Common things to look for:**
 - `[warn]: /mnt/nas-logs/... Permission denied`: This means the NFS export doesn't allow the user (UID 0/root) to write. Ensure `no_root_squash` is enabled on the NFS server.
 - `[error]: failed to flush the buffer`: This indicates a network connection issue between the Kubernetes node and the NAS IP.
+
+## 4. GCP Filestore Specific Steps
+
+If you are using **Google Cloud Filestore** as your NAS sink, follow these steps to ensure connectivity:
+
+### A. Networking & VPC
+1. **Same VPC**: Ensure your Filestore instance and GKE cluster are in the same VPC network.
+2. **IP Range**: Note the "reserved IP range" of your Filestore instance; it must not overlap with your GKE pod or services CIDR.
+
+### B. Firewall Rules
+Ensure there is a firewall rule allowing traffic on the NFS port (**2049**) within your VPC:
+```bash
+gcloud compute firewall-rules create allow-nfs-internal \
+    --network=[VPC_NAME] \
+    --allow=tcp:2049,udp:2049 \
+    --source-ranges=[GKE_NODE_CIDR]
+```
+
+### C. Retrieve Filestore Details
+Get the IP and Share Name via gcloud:
+```bash
+gcloud filestore instances list
+# Note the 'IP_ADDRESS' and 'FILE_SHARE_NAME'
+```
+
+### D. Verification from GKE
+Run a temporary pod to test the mount directly without the DaemonSet:
+```bash
+kubectl run nfs-test --image=busybox --restart=Never -- /bin/sh -c "sleep 3600"
+# (Wait for pod to be ready)
+# Then follow Method 1 to exec and test 'mount' logic manually if needed.
+```
