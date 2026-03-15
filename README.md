@@ -33,12 +33,12 @@ In Apigee Hybrid, logging is typically handled by Google Cloud Logging. However,
 ```mermaid
 graph TD
     subgraph "Kubernetes Node"
-        C1[Container A] --> L1[/var/log/containers/*.log]
+        C1[Container A] --> L1["/var/log/containers/*.log"]
         C2[Container B] --> L1
         F[Fluentd DaemonSet] -- mount --> L1
         F -- parse/filter/transform --> P[Final Payload]
     end
-    P -- write --> S[NAS/NFS Storage]
+    P -- write --> S["NAS/NFS Storage"]
 ```
 
 ## Prerequisites
