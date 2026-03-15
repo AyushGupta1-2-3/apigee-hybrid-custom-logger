@@ -56,7 +56,7 @@ spec:
           mountPath: /var/lib/docker/containers
           readOnly: true
         - name: nas-storage
-          mountPath: /mnt/nas-logs
+          mountPath: <YOUR_NAS_MOUNT_PATH>
           readOnly: false
       terminationGracePeriodSeconds: 30
       volumes:
@@ -64,7 +64,7 @@ spec:
         # CHANGE THIS: Configure your NFS or other storage backend here.
         nfs:
           server: <YOUR_NFS_SERVER_IP>
-          path: /vol1
+          path: <YOUR_NFS_SHARE_NAME>
       - name: config
         configMap:
           name: fluentd-config-map

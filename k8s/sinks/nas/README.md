@@ -156,6 +156,6 @@ The structure of the JSON string written to the NAS share.
 To verify that logs are flowing correctly to your NAS storage, follow the detailed steps in the **[Verification & Testing Guide](../../../docs/verification-guide.md)**.
 
 **Quick Checks:**
-- **From Pod**: `kubectl exec -it <pod-name> -n platform-ops -- ls -lrt /mnt/nas-logs`
-- **Write Test**: `kubectl exec -it <pod-name> -n platform-ops -- touch /mnt/nas-logs/test.txt`
+- **From Pod**: `kubectl exec -it <pod-name> -n platform-ops -- ls -lrt <YOUR_NAS_MOUNT_PATH>`
+- **Write Test**: `kubectl exec -it <pod-name> -n platform-ops -- touch <YOUR_NAS_MOUNT_PATH>/test.txt`
 - **Check Logs**: `kubectl logs -n platform-ops -l app=fluentd-daemonset`

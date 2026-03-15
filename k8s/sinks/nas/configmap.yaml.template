@@ -59,7 +59,7 @@ data:
       reserve_data true           # Keep existing fields (like metadata)
       remove_key_name_field true   # Remove the raw 'log' field after successful parse
       <parse>
-        @type multiformat
+        @type multi_format
         # Attempt 1: Parse as standard JSON (For components like Apigee Runtime, Cassandra etc.)
         <pattern>
           format json
@@ -84,40 +84,22 @@ data:
       enable_ruby true
       <record>
         # --- Metadata for Output Path Logic ---
-        # These are used to decide WHERE to save the file later.
         k8s_ns   ${record.dig("kubernetes", "namespace_name")}
         k8s_cont ${record.dig("kubernetes", "container_name")}
-        k8s_host "#{ENV['K8S_NODE_NAME']}"
-        k8s_app  ${record.dig("kubernetes", "labels", "app") || record.dig("kubernetes", "labels", "kubernetes.io/name") || "unknown"}
+        k8s_host ${ENV['K8S_NODE_NAME']}
+        k8s_app  ${record.dig("kubernetes", "labels", "app") || record.dig("kubernetes", "labels", "k8s-app") || record.dig("kubernetes", "labels", "component") || record.dig("kubernetes", "container_name") || "unknown"}
 
         # --- Standardized Resource Context ---
         res_ns   ${record.dig("kubernetes", "namespace_name")}
         res_pod  ${record.dig("kubernetes", "pod_name")}
         res_cont ${record.dig("kubernetes", "container_name")}
-        res_node "#{ENV['K8S_NODE_NAME']}"
+        res_node ${ENV['K8S_NODE_NAME']}
        
         # --- Standardized Content ---
-        # Use extracted message if available, else fall back to original log.
         msg_val  ${record['message'] || record['log']}
         
         # --- Severity Normalization ---
-        # Maps klog levels (I,W,E,F) or JSON levels to a standard set.
-        sev_val  ${
-          if record['level']
-            record['level'].upcase
-          elsif record['level_klog'] == 'I'
-            'INFO'
-          elsif record['level_klog'] == 'W'
-            'WARN'
-          elsif record['level_klog'] == 'E'
-            'ERROR'
-          elsif record['level_klog'] == 'F'
-            'FATAL'
-          else
-            # Default to ERROR for stderr streams, else INFO
-            (record['stream'] == 'stderr' ? 'ERROR' : 'INFO')
-          end
-        }
+        sev_val  ${ if record['level']; record['level'].upcase; elsif record['level_klog'] == 'I'; 'INFO'; elsif record['level_klog'] == 'W'; 'WARN'; elsif record['level_klog'] == 'E'; 'ERROR'; elsif record['level_klog'] == 'F'; 'FATAL'; else; (record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
         time_val ${time.strftime('%Y-%m-%dT%H:%M:%S.%NZ')}
       </record>
      
@@ -134,7 +116,7 @@ data:
       @type grep
       <regexp>
         key sev_val
-        pattern /^(ERROR|WARN|FATAL)$/
+        pattern /^(INFO|ERROR|WARN|FATAL)$/
       </regexp>
     </filter>
 
@@ -159,8 +141,8 @@ data:
       @type file
      
       # Dynamic path based on date and Kubernetes metadata
-      # Placeholder path: /mnt/nas-logs
-      path /mnt/nas-logs/%Y-%m-%d/${k8s_ns}_${k8s_app}_${k8s_host}
+      # Placeholder path: <YOUR_NAS_MOUNT_PATH>
+      path <YOUR_NAS_MOUNT_PATH>/%Y-%m-%d/${k8s_ns}_${k8s_app}_${k8s_host}
      
       compress text
      

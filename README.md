@@ -56,7 +56,7 @@ This project is designed to be extensible. Currently supported destinations (sin
 
 ## Supported Log Formats
 
-The solution currently handles multiple log formats out-of-the-box using the Fluentd `multiformat` parser.
+The solution currently handles multiple log formats out-of-the-box using the Fluentd `multi_format` parser.
 
 ```mermaid
 graph LR
@@ -96,9 +96,9 @@ graph LR
     **Example: Deploying NAS Sink**
     - Configure your NAS server IP (Local only):
       ```bash
-      # This generates k8s/sinks/nas/daemonset.yaml from a template
-      # and it is automatically ignored by Git.
-      ./scripts/configure-nas.sh 10.10.10.10 
+      # This generates k8s/sinks/nas/daemonset.yaml and configmap.yaml
+      # from their respective templates. These files are ignored by Git.
+      ./scripts/configure-nas.sh <NAS_IP> <NAS_SHARE_NAME> [MOUNT_PATH]
       ```
     - Apply the configuration:
       ```bash
