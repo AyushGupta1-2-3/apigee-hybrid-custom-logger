@@ -1,0 +1,15 @@
+# Kubernetes / Fluentd
+*.log
+*.pos
+*.buffer
+.fluentd-buffers/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+.idea/
+.vscode/
+*.swp
+*.bak

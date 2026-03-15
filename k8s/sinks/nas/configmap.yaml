@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config-map
+  namespace: platform-ops
+data:
+  fluent.conf: |
+    # =========================================================================
+    # STEP 1: INPUT - Capture logs from Kubernetes nodes
+    # =========================================================================
+    # We use the 'tail' plugin to read log files produced by the Kubernetes CRI 
+    # (Container Runtime Interface). These logs are stored on the node host 
+    # at /var/log/containers/*.log.
+    <source>
+      @type tail
+      path /var/log/containers/*.log
+      exclude_path ["/var/log/containers/fluentd*.log"]
+      pos_file /var/log/fluentd-containers.log.pos
+      tag kubernetes.*
+      read_from_head true
+      <parse>
+        @type cri  # CRIs like containerd/docker use a specific prefix format
+      </parse>
+    </source>
+
+    # =========================================================================
+    # STEP 2: ENRICHMENT - Inject Kubernetes Metadata
+    # =========================================================================
+    # This filter talks to the Kubernetes API to find which Pod, Namespace, 
+    # and Labels are associated with the log file currently being read.
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+      verify_ssl false
+    </filter>
+
+    # =========================================================================
+    # STEP 3: PARSING - Extract structured data from raw log strings
+    # =========================================================================
+    # Application logs are often nested inside a 'log' field as either JSON 
+    # or klog strings. This step extracts those into top-level record fields.
+    # NOTE: Currently supported formats for automated parsing are JSON and klog only.
+    <filter kubernetes.**>
+      @type parser
+      key_name log
+      reserve_data true           # Keep existing fields (like metadata)
+      remove_key_name_field true   # Remove the raw 'log' field after successful parse
+      <parse>
+        @type multiformat
+        # Attempt 1: Parse as standard JSON (For components like Apigee Runtime, Cassandra etc.)
+        <pattern>
+          format json
+        </pattern>
+        # Attempt 2: Parse as Kubernetes klog (standard for Go/K8s components like Apigee Connect, Apigee Metrics, Apigee Telemetry etc.)
+        <pattern>
+          format regexp
+          # klog format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+          expression /^(?<level_klog>[IWEF])(?<time_klog>\d{4} \s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(?<threadid>\d+)\s+(?<file>[^:]+):(?<line>\d+)\]\s+(?<message>.*)$/
+        </pattern>
+      </parse>
+      emit_invalid_record_to_error false # If it's not JSON or klog, treat as raw text
+    </filter>
+
+    # =========================================================================
+    # STEP 4: TRANSFORMATION - Standardize fields and map values
+    # =========================================================================
+    # This step ensures all logs (JSON or klog) have consistent field names 
+    # and standardizes severity levels.
+    <filter kubernetes.**>
+      @type record_transformer
+      enable_ruby true
+      <record>
+        # --- Metadata for Output Path Logic ---
+        # These are used to decide WHERE to save the file later.
+        k8s_ns   ${record.dig("kubernetes", "namespace_name")}
+        k8s_cont ${record.dig("kubernetes", "container_name")}
+        k8s_host "#{ENV['K8S_NODE_NAME']}"
+        k8s_app  ${record.dig("kubernetes", "labels", "app") || record.dig("kubernetes", "labels", "kubernetes.io/name") || "unknown"}
+
+        # --- Standardized Resource Context ---
+        res_ns   ${record.dig("kubernetes", "namespace_name")}
+        res_pod  ${record.dig("kubernetes", "pod_name")}
+        res_cont ${record.dig("kubernetes", "container_name")}
+        res_node "#{ENV['K8S_NODE_NAME']}"
+       
+        # --- Standardized Content ---
+        # Use extracted message if available, else fall back to original log.
+        msg_val  ${record['message'] || record['log']}
+        
+        # --- Severity Normalization ---
+        # Maps klog levels (I,W,E,F) or JSON levels to a standard set.
+        sev_val  ${
+          if record['level']
+            record['level'].upcase
+          elsif record['level_klog'] == 'I'
+            'INFO'
+          elsif record['level_klog'] == 'W'
+            'WARN'
+          elsif record['level_klog'] == 'E'
+            'ERROR'
+          elsif record['level_klog'] == 'F'
+            'FATAL'
+          else
+            # Default to ERROR for stderr streams, else INFO
+            (record['stream'] == 'stderr' ? 'ERROR' : 'INFO')
+          end
+        }
+        time_val ${time.strftime('%Y-%m-%dT%H:%M:%S.%NZ')}
+      </record>
+     
+      # Cleanup: remove intermediate fields to minimize payload size
+      remove_keys kubernetes, docker, stream, log, level, thread, logger, time_klog, level_klog, threadid, file, line
+    </filter>
+
+    # =========================================================================
+    # STEP 5: FILTERING - Drop unwanted logs
+    # =========================================================================
+    # Only keep critical logs. You can modify this pattern to include 
+    # 'INFO', 'DEBUG', etc., based on your requirements.
+    <filter kubernetes.**>
+      @type grep
+      <regexp>
+        key sev_val
+        pattern /^(ERROR|WARN|FATAL)$/
+      </regexp>
+    </filter>
+
+    # =========================================================================
+    # STEP 6: PACKAGING - Prepare final JSON document
+    # =========================================================================
+    # Convert the standardized record into a single clean JSON string.
+    <filter kubernetes.**>
+      @type record_transformer
+      enable_ruby true
+      <record>
+        final_payload ${ require 'json'; { "resource" => { "namespace" => record["res_ns"], "pod" => record["res_pod"], "container" => record["res_cont"], "node" => record["res_node"] }, "message" => record["msg_val"], "severity" => record["sev_val"], "timestamp" => record["time_val"] }.to_json }
+      </record>
+      remove_keys res_ns, res_pod, res_cont, res_node, msg_val, sev_val, time_val
+    </filter>
+
+    # =========================================================================
+    # STEP 7: OUTPUT - Ship logs to destination
+    # =========================================================================
+    # Finally, write the processed JSON payloads to the mounted NAS share.
+    <match kubernetes.**>
+      @type file
+     
+      # Dynamic path based on date and Kubernetes metadata
+      # Placeholder path: /mnt/nas-logs
+      path /mnt/nas-logs/%Y-%m-%d/${k8s_ns}_${k8s_app}_${k8s_host}
+     
+      compress text
+     
+      # Buffering ensures we don't overwhelm the destination with tiny writes.
+      <buffer time, k8s_ns, k8s_app, k8s_host>
+        path /var/log/fluentd-buffers/nas.buffer
+        timekey 1d
+        timekey_use_utc true
+        timekey_wait 1m
+        flush_mode interval
+        flush_interval 30s
+      </buffer>
+     
+      <format>
+        @type single_value
+        message_key final_payload # Write ONLY the JSON string to the file
+      </format>
+    </match>
