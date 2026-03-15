@@ -15,11 +15,19 @@
 # limitations under the License.
 
 # Configuration script to set the NAS Server IP using a template
-# Usage: ./scripts/configure-nas.sh <IP_ADDRESS> <SHARE_NAME> [MOUNT_PATH]
-
 NAS_IP=$1
 NAS_SHARE=$2
-MOUNT_PATH=${3:-/mnt/nas-logs}  # Defaults to /mnt/nas-logs if not provided
+MOUNT_PATH=${3:-/mnt/nas-logs}
+
+if [ -z "$NAS_IP" ] || [ -z "$NAS_SHARE" ]; then
+    echo "Usage: $0 <NAS_IP_ADDRESS> <NAS_SHARE_NAME> [INTERNAL_MOUNT_PATH]"
+    echo "Example: $0 10.226.29.34 /vol1 /mnt/nas-logs"
+    exit 1
+fi
+
+# Ensure NAS_SHARE and MOUNT_PATH start with /
+[[ $NAS_SHARE != /* ]] && NAS_SHARE="/$NAS_SHARE"
+[[ $MOUNT_PATH != /* ]] && MOUNT_PATH="/$MOUNT_PATH"
 
 DS_TEMPLATE="k8s/sinks/nas/daemonset.yaml.template"
 DS_OUTPUT="k8s/sinks/nas/daemonset.yaml"
