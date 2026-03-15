@@ -56,11 +56,26 @@ This project is designed to be extensible. Currently supported destinations (sin
 
 ## Supported Log Formats
 
-The solution currently supports automated parsing for the following formats:
+The solution currently handles multiple log formats out-of-the-box using the Fluentd `multiformat` parser.
+
+```mermaid
+graph LR
+    F[Log Formats] --> S[Currently Supported]
+    F --> R[Roadmap / Future]
+    
+    S --> J[JSON - Standard]
+    S --> K[klog - K8s/Go]
+    
+    R --> SY[Syslog]
+    R --> CL[Common Log Format]
+    R --> ML[Custom Multiline]
+```
+
+### Format Details
 - **JSON**: Standard structured logs.
 - **klog**: The default logging format for Kubernetes system components and Go-based applications.
 
-*Note: Automated field extraction and severity mapping are currently limited to these two formats.*
+*Note: Automated field extraction and severity mapping are currently optimized for these two formats.*
 
 ## Installation
 
