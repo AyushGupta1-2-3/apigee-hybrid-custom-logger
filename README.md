@@ -94,12 +94,11 @@ graph LR
    Browse to a sink directory (e.g., `k8s/sinks/nas/`) and follow its specific configuration.
 
     **Example: Deploying NAS Sink**
-    - Configure your NAS server IP:
+    - Configure your NAS server IP (Local only):
       ```bash
-      # Automated way:
-      ./scripts/configure-nas.sh 10.172.239.194
-      
-      # Manual way: Edit k8s/sinks/nas/daemonset.yaml directly
+      # This generates k8s/sinks/nas/daemonset.yaml from a template
+      # and it is automatically ignored by Git.
+      ./scripts/configure-nas.sh 10.10.10.10 
       ```
     - Apply the configuration:
       ```bash

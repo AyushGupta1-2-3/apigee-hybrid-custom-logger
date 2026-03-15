@@ -14,25 +14,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Configuration script to set the NAS Server IP
+# Configuration script to set the NAS Server IP using a template
 # Usage: ./scripts/configure-nas.sh <IP_ADDRESS>
 
 NAS_IP=$1
+TEMPLATE="k8s/sinks/nas/daemonset.yaml.template"
+OUTPUT="k8s/sinks/nas/daemonset.yaml"
 
 if [ -z "$NAS_IP" ]; then
     echo "Usage: $0 <NAS_IP_ADDRESS>"
     exit 1
 fi
 
+if [ ! -f "$TEMPLATE" ]; then
+    echo "Error: Template file $TEMPLATE not found."
+    exit 1
+fi
+
+# Create the output file from the template
+cp "$TEMPLATE" "$OUTPUT"
+
 # Detect OS for sed compatibility
 OS="$(uname)"
 
 if [ "$OS" == "Darwin" ]; then
     # Mac OS
-    sed -i '' "s/<YOUR_NFS_SERVER_IP>/$NAS_IP/g" k8s/sinks/nas/daemonset.yaml
+    sed -i '' "s/<YOUR_NFS_SERVER_IP>/$NAS_IP/g" "$OUTPUT"
 else
     # Linux and others
-    sed -i "s/<YOUR_NFS_SERVER_IP>/$NAS_IP/g" k8s/sinks/nas/daemonset.yaml
+    sed -i "s/<YOUR_NFS_SERVER_IP>/$NAS_IP/g" "$OUTPUT"
 fi
 
-echo "Successfully updated NAS server IP to: $NAS_IP in k8s/sinks/nas/daemonset.yaml"
+echo "Successfully generated $OUTPUT with NAS server IP: $NAS_IP"
+echo "Note: This file is ignored by Git to keep your internal IP private."

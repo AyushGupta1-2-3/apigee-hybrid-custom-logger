@@ -8,6 +8,9 @@
 .DS_Store
 Thumbs.db
 
+# Kubernetes manifests (generated)
+k8s/sinks/nas/daemonset.yaml
+
 # Misc
 .idea/
 .vscode/
