@@ -108,7 +108,8 @@ graph LR
 
 ## Configuration
 
-For detailed information on the step-by-step logic of how logs are processed and transformed, please refer to the sink-specific pipeline documentation:
+For detailed information on setting up your storage backend and the log processing logic:
+- **[GCP Filestore Setup Guide](docs/gcp-setup.md)**
 - **[NAS Sink Pipeline Details](k8s/sinks/nas/README.md)**
 
 To verify your installation and test the end-to-end log flow, follow the **[Verification & Testing Guide](docs/verification-guide.md)**.
