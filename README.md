@@ -93,13 +93,19 @@ graph LR
 3. **Choose and Deploy a Sink**:
    Browse to a sink directory (e.g., `k8s/sinks/nas/`) and follow its specific configuration.
 
-   **Example: Deploying NAS Sink**
-   - Edit `k8s/sinks/nas/daemonset.yaml` to include your NFS server details.
-   - Apply the configuration:
-     ```bash
-     kubectl apply -f k8s/sinks/nas/configmap.yaml
-     kubectl apply -f k8s/sinks/nas/daemonset.yaml
-     ```
+    **Example: Deploying NAS Sink**
+    - Configure your NAS server IP:
+      ```bash
+      # Automated way:
+      ./scripts/configure-nas.sh 10.172.239.194
+      
+      # Manual way: Edit k8s/sinks/nas/daemonset.yaml directly
+      ```
+    - Apply the configuration:
+      ```bash
+      kubectl apply -f k8s/sinks/nas/configmap.yaml
+      kubectl apply -f k8s/sinks/nas/daemonset.yaml
+      ```
 
 ## Configuration
 
