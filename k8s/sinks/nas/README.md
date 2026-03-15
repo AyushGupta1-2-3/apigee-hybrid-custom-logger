@@ -150,3 +150,12 @@ The structure of the JSON string written to the NAS share.
 | `message` | `.message` | The processed log message content. |
 | `severity` | `.severity` | Normalized log level (e.g., ERROR). |
 | `timestamp` | `.timestamp` | ISO8601 formatted timestamp. |
+
+## Verification & Troubleshooting
+
+To verify that logs are flowing correctly to your NAS storage, follow the detailed steps in the **[Verification & Testing Guide](../../../docs/verification-guide.md)**.
+
+**Quick Checks:**
+- **From Pod**: `kubectl exec -it <pod-name> -n platform-ops -- ls -lrt /mnt/nas-logs`
+- **Write Test**: `kubectl exec -it <pod-name> -n platform-ops -- touch /mnt/nas-logs/test.txt`
+- **Check Logs**: `kubectl logs -n platform-ops -l app=fluentd-daemonset`

@@ -41,31 +41,82 @@ kubectl get pods -n platform-ops -l app=fluentd-daemonset
 kubectl logs -n platform-ops -l app=fluentd-daemonset
 ```
 
-## 3. Storage Connectivity Test
-Ensure the DaemonSet can successfully mount the NAS/NFS share:
+## 3. NAS Storage Verification Methods
+
+### Method 1: Verification from inside a Fluentd Pod
+This is the easiest way to check if the NFS mount is working and if Fluentd has permission to write files.
+
+1. **Find the pod name**:
+   ```bash
+   kubectl get pods -n platform-ops -l app=fluentd-daemonset
+   ```
+
+2. **Exec into one of the pods**:
+   ```bash
+   kubectl exec -it <pod-name> -n platform-ops -- sh
+   ```
+
+3. **Navigate to the mount point and list files**:
+   ```bash
+   cd /mnt/nas-logs
+   ls -lrt
+   ```
+   *Check for the date-based folder structure defined in your config (e.g., 2026-03-15/).*
+
+4. **Tail a specific log file to see the content**:
+   ```bash
+   # Replace with an actual file found in your LS command
+   tail -f 2026-03-15/default_my-app_node-1.log
+   ```
+
+**Pro-Tip: Testing Write Permissions**
+If you are inside the pod and want to do a quick manual test, run:
+```bash
+touch /mnt/nas-logs/test-write.txt
+```
+If this command succeeds without an error, the mount is healthy.
+
+### Method 2: Verification from the NFS Server
+If you have SSH access to the NAS server itself (e.g., `10.172.239.194`), you can verify the files directly on the source disk.
+
+1. **SSH into the NAS server**.
+2. **Navigate to the exported path**:
+   ```bash
+   cd /vol1
+   ls -alh
+   ```
+   If you see the files here, the network connection and permissions are 100% correct.
+
+#### Option: Using a Support/Bastion VM
+If you don't have direct access to the NAS, you can create a "debug" instance in the same VPC to browse the logs.
+
+1. **SSH into a Linux VM** in the same VPC as your Filestore:
+   ```bash
+   gcloud compute ssh [VM_NAME] --zone [ZONE]
+   ```
+2. **Install the NFS client**:
+   ```bash
+   sudo apt-get update && sudo apt-get install nfs-common -y
+   ```
+3. **Mount the NAS to a local folder**:
+   ```bash
+   sudo mkdir -p /mnt/nas-verify
+   # Replace with your Filestore IP and Share Name
+   sudo mount 10.172.239.194:/vol1 /mnt/nas-verify
+   ```
+4. **Explore your files**:
+   ```bash
+   cd /mnt/nas-verify
+   ls -R
+   ```
+
+### Method 3: Troubleshoot using Fluentd Logs
+If you don't see any files in `/mnt/nas-logs`, check Fluentd's internal logs for errors.
 
 ```bash
-# Exec into a fluentd pod
-kubectl exec -it $(kubectl get pods -n platform-ops -l app=fluentd-daemonset -o jsonpath='{.items[0].metadata.name}') -n platform-ops -- ls -lh /mnt/nas-logs
+kubectl logs -f <pod-name> -n platform-ops
 ```
 
-## 4. End-to-End Log Flow Test
-To verify the entire pipeline (Parsing -> Transformation -> Output), you can inject a mock log file into a container's log path or simply trigger an error in an existing application.
-
-### Verification Script
-Run this script on a node or as a temporary pod to test the parsing:
-
-```bash
-# 1. Identify a container log path on the node
-LOG_PATH=$(kubectl get pod <TARGET_POD> -o jsonpath='{.status.containerStatuses[0].containerID}' | sed 's|cri-containerd://||')
-# Note: Real path is usually /var/log/pods/... or /var/log/containers/...
-
-# 2. Check the NAS directory for the corresponding output
-# Path format: /mnt/nas-logs/YYYY-MM-DD/namespace_app_node/
-ls -R /mnt/nas-logs/$(date +%Y-%m-%d)/
-```
-
-## 5. Troubleshooting Common Issues
-- **MountVolume.SetUp failed**: Check NFS server IP and export path in `daemonset.yaml`.
-- **Permission Denied**: Ensure the NAS share allows writes from the Kubernetes node IPs.
-- **Config error**: Check Fluentd logs; a common issue is missing plugins (this image uses `fluent/fluentd-kubernetes-daemonset:v1.16-debian-nfs-1` which includes most required plugins).
+**Common things to look for:**
+- `[warn]: /mnt/nas-logs/... Permission denied`: This means the NFS export doesn't allow the user (UID 0/root) to write. Ensure `no_root_squash` is enabled on the NFS server.
+- `[error]: failed to flush the buffer`: This indicates a network connection issue between the Kubernetes node and the NAS IP.
