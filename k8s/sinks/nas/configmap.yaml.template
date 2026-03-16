@@ -64,11 +64,12 @@ data:
         <pattern>
           format json
         </pattern>
-        # Attempt 2: Parse as Kubernetes klog (standard for Go/K8s components like Apigee Connect, Apigee Metrics, Apigee Telemetry, cert-manager etc.)
+        # Attempt 2: Parse as Kubernetes klog (standard for Go/K8s components like Apigee Connect, cert-manager etc.)
         <pattern>
           format regexp
           # klog format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-          expression /^(?<level_klog>[IWEF])(?<time_klog>\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(?<threadid>\d+)\s+(?<file>[^:]+):(?<line>\d+)\]\s+(?<message>.*)$/
+          # Note: \s* handles cases where there is no space after the bracket
+          expression /^(?<level_klog>[IWEF])(?<time_klog>\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(?<threadid>\d+)\s+(?<file>[^:]+):(?<line>\d+)\]\s*(?<message>.*)/
         </pattern>
         # Attempt 3: Parse as logfmt (standard for Prometheus-style components like node_exporter, etc.)
         <pattern>
