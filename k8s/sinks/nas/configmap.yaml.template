@@ -56,28 +56,51 @@ data:
     <filter kubernetes.**>
       @type parser
       key_name log
-      reserve_data true           # Keep existing fields (like metadata)
-      remove_key_name_field true   # Remove the raw 'log' field after successful parse
+      reserve_data true
+      remove_key_name_field true
       <parse>
         @type multi_format
-        # Attempt 1: Parse as Kubernetes klog (standard for Go/K8s components like Apigee Connect, cert-manager etc.)
+        # Attempt 1: Parse as Kubernetes klog
         <pattern>
           format regexp
-          # klog format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
           expression /^(?<level_klog>[IWEF])(?<time_klog>\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(?<threadid>\d+)\s+(?<file>[^:]+):(?<line>\d+)\]\s*(?<message>.*)/
         </pattern>
-        # Attempt 2: Parse as standard JSON (For components like Apigee Runtime, Cassandra etc.)
+        # Attempt 2: Parse as JSON
         <pattern>
           format json
         </pattern>
-        # Attempt 3: Parse as logfmt (standard for Prometheus-style components like node_exporter, etc.)
+        # Attempt 3: Parse as logfmt
         <pattern>
           format regexp
-          # logfmt format: ts=... caller=... level=... msg=... (plus arbitrary key=value)
           expression /^ts=(?<time>[^ ]+)\s+caller=(?<caller>[^ ]+)\s+level=(?<level>[^ ]+)\s+(?<message>.*)/
         </pattern>
       </parse>
-      emit_invalid_record_to_error false # If it's not JSON or klog, treat as raw text
+      emit_invalid_record_to_error false
+    </filter>
+
+    <filter kubernetes.**>
+      @type parser
+      key_name message
+      reserve_data true
+      remove_key_name_field true
+      <parse>
+        @type multi_format
+        # Attempt 1: Parse as Kubernetes klog
+        <pattern>
+          format regexp
+          expression /^(?<level_klog>[IWEF])(?<time_klog>\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(?<threadid>\d+)\s+(?<file>[^:]+):(?<line>\d+)\]\s*(?<message>.*)/
+        </pattern>
+        # Attempt 2: Parse as JSON
+        <pattern>
+          format json
+        </pattern>
+        # Attempt 3: Parse as logfmt
+        <pattern>
+          format regexp
+          expression /^ts=(?<time>[^ ]+)\s+caller=(?<caller>[^ ]+)\s+level=(?<level>[^ ]+)\s+(?<message>.*)/
+        </pattern>
+      </parse>
+      emit_invalid_record_to_error false
     </filter>
 
     # =========================================================================
