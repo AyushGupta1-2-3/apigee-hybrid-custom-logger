@@ -240,7 +240,7 @@ The Janitor is automatically configured when you run the `./scripts/configure-na
 
 1.  **Generate the manifest**:
     ```bash
-    ./scripts/configure-nas.sh <NAS_IP> <NAS_SHARE>
+    ./scripts/configure-nas.sh <NAS_IP> <NAS_SHARE> [MOUNT_PATH] [RETENTION_DAYS]
     ```
 2.  **Deploy the CronJob**:
     ```bash

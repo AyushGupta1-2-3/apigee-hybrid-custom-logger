@@ -33,7 +33,7 @@ spec:
             image: alpine:3.18
             env:
             - name: RETENTION_DAYS
-              value: "30"
+              value: "<RETENTION_DAYS>"
             command:
             - /bin/sh
             - -c

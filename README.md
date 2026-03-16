@@ -111,8 +111,8 @@ The following table summarizes the component support for each log format:
     - Configure your NAS server IP (Local only):
       ```bash
       # This generates k8s/sinks/nas/daemonset.yaml and configmap.yaml
-      # from their respective templates. These files are ignored by Git.
-      ./scripts/configure-nas.sh <NAS_IP> <NAS_SHARE_NAME> [MOUNT_PATH]
+      # Usage: ./scripts/configure-nas.sh <NAS_IP> <NAS_SHARE_NAME> [MOUNT_PATH] [RETENTION_DAYS]
+      ./scripts/configure-nas.sh 10.226.29.34 /vol1 /mnt/nas-logs 30
       ```
     - Apply the configuration:
       ```bash

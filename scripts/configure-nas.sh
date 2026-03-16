@@ -18,10 +18,11 @@
 NAS_IP=$1
 NAS_SHARE=$2
 MOUNT_PATH=${3:-/mnt/nas-logs}
+RETENTION_DAYS=${4:-30}
 
 if [ -z "$NAS_IP" ] || [ -z "$NAS_SHARE" ]; then
-    echo "Usage: $0 <NAS_IP_ADDRESS> <NAS_SHARE_NAME> [INTERNAL_MOUNT_PATH]"
-    echo "Example: $0 10.226.29.34 /vol1 /mnt/nas-logs"
+    echo "Usage: $0 <NAS_IP_ADDRESS> <NAS_SHARE_NAME> [INTERNAL_MOUNT_PATH] [RETENTION_DAYS]"
+    echo "Example: $0 10.226.29.34 /vol1 /mnt/nas-logs 30"
     exit 1
 fi
 
@@ -36,8 +37,8 @@ JN_TEMPLATE="k8s/sinks/nas/janitor.yaml.template"
 JN_OUTPUT="k8s/sinks/nas/janitor.yaml"
 
 if [ -z "$NAS_IP" ] || [ -z "$NAS_SHARE" ]; then
-    echo "Usage: $0 <NAS_IP_ADDRESS> <NAS_SHARE_NAME> [INTERNAL_MOUNT_PATH]"
-    echo "Example: $0 10.226.29.34 /vol1 /mnt/nas-logs"
+    echo "Usage: $0 <NAS_IP_ADDRESS> <NAS_SHARE_NAME> [INTERNAL_MOUNT_PATH] [RETENTION_DAYS]"
+    echo "Example: $0 10.226.29.34 /vol1 /mnt/nas-logs 30"
     exit 1
 fi
 
@@ -74,6 +75,7 @@ if [ -f "$JN_TEMPLATE" ]; then
     eval "$SED_CMD \"s|<YOUR_NAS_IP>|$NAS_IP|g\" $JN_OUTPUT"
     eval "$SED_CMD \"s|<YOUR_NAS_PATH>|$NAS_SHARE|g\" $JN_OUTPUT"
     eval "$SED_CMD \"s|<YOUR_NAS_MOUNT_PATH>|$MOUNT_PATH|g\" $JN_OUTPUT"
+    eval "$SED_CMD \"s|<RETENTION_DAYS>|$RETENTION_DAYS|g\" $JN_OUTPUT"
     echo "Successfully generated $JN_OUTPUT"
 else
     echo "Warning: $JN_TEMPLATE not found"
@@ -83,4 +85,5 @@ echo "Configuration Summary:"
 echo "  NAS server IP: $NAS_IP"
 echo "  NAS share path (Remote): $NAS_SHARE"
 echo "  NAS mount point (Local): $MOUNT_PATH"
+echo "  Retention Period: $RETENTION_DAYS days"
 echo "Note: This file is ignored by Git to keep your internal IP private."
