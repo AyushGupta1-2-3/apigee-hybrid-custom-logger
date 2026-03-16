@@ -22,7 +22,7 @@ A lightweight, high-performance custom logging solution for Apigee Hybrid using 
 
 In Apigee Hybrid, logging is typically handled by Google Cloud Logging. However, many enterprise customers require logs to be exported to on-premises storage or specific log management systems. This project provides a Fluentd-based DaemonSet that:
 - **Taps into Kubernetes logs**: Reads logs directly from `/var/log/containers/`.
-- **Supports Multiple Formats**: Automatically parses both JSON and `klog` formatted logs. (Note: These are currently the only two supported formats for automated parsing).
+- **Supports Multiple Formats**: Automatically parses JSON, `klog`, and `logfmt` formatted logs.
 - **Enriches Metadata**: Adds Kubernetes pod, namespace, and container information.
 - **Filters by Severity**: Allows filtering (e.g., only ERROR and WARN logs).
 - **Transforms Payloads**: Formats logs into a custom JSON structure.
@@ -65,6 +65,7 @@ graph LR
     
     S --> J[JSON - Standard]
     S --> K[klog - K8s/Go]
+    S --> L[logfmt - Prometheus]
     
     R --> SY[Syslog]
     R --> CL[Common Log Format]
@@ -74,6 +75,7 @@ graph LR
 ### Format Details
 - **JSON**: Standard structured logs.
 - **klog**: The default logging format for Kubernetes system components and Go-based applications.
+- **logfmt**: Standard format for components like `node_exporter`, `alertmanager`, etc.
 
 *Note: Automated field extraction and severity mapping are currently optimized for these two formats.*
 

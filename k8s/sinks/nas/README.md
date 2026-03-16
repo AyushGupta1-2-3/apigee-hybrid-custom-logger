@@ -33,7 +33,7 @@ The `kubernetes_metadata` filter injects cluster-specific context.
 ### 3. Parsing
 The `parser` filter extracts the application payload from the `log` field (supports JSON and klog).
 - **New Fields**: `level: "error"`, `message: "disk full"` (if JSON) or `level_klog`, `msg_val` (if klog).
-- **Note**: Currently supported formats for automated parsing are JSON and klog only.
+- **Note**: Currently supported formats for automated parsing are JSON, klog and logfmt.
 
 ### 4. Normalization
 The `record_transformer` maps various field names to a standard set (e.g., `sev_val`, `msg_val`).
@@ -150,6 +150,27 @@ The structure of the JSON string written to the NAS share.
 | `message` | `.message` | The processed log message content. |
 | `severity` | `.severity` | Normalized log level (e.g., ERROR). |
 | `timestamp` | `.timestamp` | ISO8601 formatted timestamp. |
+
+### Case 3: logfmt Format (Node Exporter)
+**Raw Log (from node):**
+```text
+2026-03-12T03:26:22.182Z stdout F ts=2026-03-12T03:26:22.182Z caller=node_exporter.go:117 level=info collector=zfs
+```
+
+**Final Processed Log (on NAS):**
+```json
+{
+  "resource": {
+    "namespace": "monitoring",
+    "pod": "prometheus-node-exporter-abc",
+    "container": "node-exporter",
+    "node": "gke-node-1"
+  },
+  "message": "collector=zfs",
+  "severity": "INFO",
+  "timestamp": "2026-03-12T03:26:22.182000Z"
+}
+```
 
 ## Verification & Troubleshooting
 
