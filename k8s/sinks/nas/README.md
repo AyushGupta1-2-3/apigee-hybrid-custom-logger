@@ -151,6 +151,27 @@ The structure of the JSON string written to the NAS share.
 | `severity` | `.severity` | Normalized log level (e.g., ERROR). |
 | `timestamp` | `.timestamp` | ISO8601 formatted timestamp. |
 
+### Case 2: klog Format (cert-manager)
+**Raw Log (from node):**
+```text
+I0316 05:05:35.347703 1 reconciler.go:141] "Updated object" logger="cert-manager" name="cert-manager-webhook"
+```
+
+**Final Processed Log (on NAS):**
+```json
+{
+  "resource": {
+    "namespace": "cert-manager",
+    "pod": "cert-manager-abc",
+    "container": "cert-manager",
+    "node": "gke-node-1"
+  },
+  "message": "\"Updated object\" logger=\"cert-manager\" name=\"cert-manager-webhook\"",
+  "severity": "INFO",
+  "timestamp": "2026-03-16T05:05:35.347703Z"
+}
+```
+
 ### Case 3: logfmt Format (Node Exporter)
 **Raw Log (from node):**
 ```text
