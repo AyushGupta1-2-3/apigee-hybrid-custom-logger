@@ -74,19 +74,19 @@ graph LR
     R --> ML[Custom Multiline]
 ```
 
-### Verification & Support Matrix
+### Supported Log Formats Matrix
 
-The following table summarizes the component-level verification performing for each supported log format:
+The following table summarizes the component support for each log format:
 
-| Category | Component Examples | Log Format | Status | Verification Method |
-| :--- | :--- | :--- | :--- | :--- |
-| **Apigee Core** | Runtime, Sync, UDCA | JSON | ✅ | Regex & Flow Test |
-| **Apigee Metrics** | Metrics Adapter | klog (Standard) | ✅ | Regex Test |
-| **Infrastructure** | kube-apiserver, cert-manager | klog (Relaxed) | ✅ | Regex Test (User Sample) |
-| **Monitoring** | node_exporter, alertmanager | logfmt | ✅ | Regex Test |
-| **K8s Operators** | apigee-controller, metrics-operator | Zap / Controller-runtime | ✅ | Regex Test (User Sample) |
-| **Utilities** | Helper binaries, Generic Go | Go Standard Library | ✅ | Regex Test (User Sample) |
-| **Generic** | Anything else on stdout/stderr | Plain Text | ✅ | Fallback & "Error" Keyword Heuristic |
+| Category | Component Examples | Log Format |
+| :--- | :--- | :--- |
+| **Apigee Core** | Runtime, Sync, UDCA | JSON |
+| **Apigee Metrics** | Metrics Adapter | klog (Standard) |
+| **Infrastructure** | kube-apiserver, cert-manager | klog (Relaxed) |
+| **Monitoring** | node_exporter, alertmanager | logfmt |
+| **K8s Operators** | apigee-controller, metrics-operator | Zap / Controller-runtime |
+| **Utilities** | Helper binaries, Generic Go | Go Standard Library |
+| **Generic** | Anything else on stdout/stderr | Plain Text (Fallback) |
 
 *Note: Automated field extraction and severity mapping are currently optimized for these formats.*
 
