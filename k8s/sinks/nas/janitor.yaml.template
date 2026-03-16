@@ -40,15 +40,15 @@ spec:
             - |
               echo "Starting Janitor Cleanup..."
               echo "Retention Period: ${RETENTION_DAYS} days"
-              echo "Looking for folders in /mnt/nas-logs older than ${RETENTION_DAYS} days..."
+              echo "Looking for folders in <YOUR_NAS_MOUNT_PATH> older than ${RETENTION_DAYS} days..."
               
               # THE CLEANUP COMMAND:
-              find /mnt/nas-logs -mindepth 1 -maxdepth 1 -type d -mtime +${RETENTION_DAYS} -print -exec rm -rf {} +
+              find <YOUR_NAS_MOUNT_PATH> -mindepth 1 -maxdepth 1 -type d -mtime +${RETENTION_DAYS} -print -exec rm -rf {} +
               
               echo "Cleanup Complete."
             volumeMounts:
             - name: nas-storage
-              mountPath: /mnt/nas-logs
+              mountPath: <YOUR_NAS_MOUNT_PATH>
               readOnly: false
           restartPolicy: OnFailure
           volumes:

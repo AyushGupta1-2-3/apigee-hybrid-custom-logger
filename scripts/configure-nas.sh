@@ -73,6 +73,7 @@ if [ -f "$JN_TEMPLATE" ]; then
     cp "$JN_TEMPLATE" "$JN_OUTPUT"
     eval "$SED_CMD \"s|<YOUR_NAS_IP>|$NAS_IP|g\" $JN_OUTPUT"
     eval "$SED_CMD \"s|<YOUR_NAS_PATH>|$NAS_SHARE|g\" $JN_OUTPUT"
+    eval "$SED_CMD \"s|<YOUR_NAS_MOUNT_PATH>|$MOUNT_PATH|g\" $JN_OUTPUT"
     echo "Successfully generated $JN_OUTPUT"
 else
     echo "Warning: $JN_TEMPLATE not found"
