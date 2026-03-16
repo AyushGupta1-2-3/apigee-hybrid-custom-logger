@@ -74,6 +74,16 @@ data:
           format regexp
           expression /^ts=(?<time>[^ ]+)\s+caller=(?<caller>[^ ]+)\s+level=(?<level>[^ ]+)\s+(?<message>.*)/
         </pattern>
+        # Attempt 4: Parse as Zap / Controller-runtime
+        <pattern>
+          format regexp
+          expression /^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\s+(?<level>[A-Z]+)\s+(?<message>.*)/
+        </pattern>
+        # Attempt 5: Parse as Go Standard Library log
+        <pattern>
+          format regexp
+          expression /^(?<time>\d{4}\/\d{2}\/\d{2}\s+[\d:]+)\s+(?<message>.*)/
+        </pattern>
       </parse>
       emit_invalid_record_to_error false
     </filter>
@@ -98,6 +108,16 @@ data:
         <pattern>
           format regexp
           expression /^ts=(?<time>[^ ]+)\s+caller=(?<caller>[^ ]+)\s+level=(?<level>[^ ]+)\s+(?<message>.*)/
+        </pattern>
+        # Attempt 4: Parse as Zap / Controller-runtime
+        <pattern>
+          format regexp
+          expression /^(?<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\s+(?<level>[A-Z]+)\s+(?<message>.*)/
+        </pattern>
+        # Attempt 5: Parse as Go Standard Library log
+        <pattern>
+          format regexp
+          expression /^(?<time>\d{4}\/\d{2}\/\d{2}\s+[\d:]+)\s+(?<message>.*)/
         </pattern>
       </parse>
       emit_invalid_record_to_error false
@@ -133,7 +153,7 @@ data:
         msg_val  ${ record['msg_val'] || (klog_parts ? klog_parts[:msg] : (record['message'] || record['log'])) }
         
         # --- Severity Normalization ---
-        sev_val  ${ if record['level']; record['level'].upcase; elsif klog_parts; (klog_parts[:level] == 'I' ? 'INFO' : (klog_parts[:level] == 'W' ? 'WARN' : (klog_parts[:level] == 'E' ? 'ERROR' : (klog_parts[:level] == 'F' ? 'FATAL' : 'INFO')))); else; (record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
+        sev_val  ${ if record['level']; record['level'].upcase; elsif klog_parts; (klog_parts[:level] == 'I' ? 'INFO' : (klog_parts[:level] == 'W' ? 'WARN' : (klog_parts[:level] == 'E' ? 'ERROR' : (klog_parts[:level] == 'F' ? 'FATAL' : 'INFO')))); else; ((record['message'] || record['log'] || "").downcase.include?("error") || record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
         time_val ${time.strftime('%Y-%m-%dT%H:%M:%S.%NZ')}
       </record>
      
