@@ -251,3 +251,36 @@ The Janitor is automatically configured when you run the `./scripts/configure-na
     ```bash
     kubectl create job --from=cronjob/nas-janitor manual-cleanup -n platform-ops
     ```
+## Troubleshooting
+
+### Log Silence (No logs appearing on NAS)
+If logs stop appearing on the NAS despite pods being `Running`, check the following:
+
+#### 1. Check Fluentd Pod Logs
+Look for `RuntimeError` or `error="failed to expand record..."`:
+```bash
+kubectl logs -n platform-ops -l app=fluentd-daemonset --tail=100
+```
+**Fix**: Ensure the `ConfigMap` logic doesn't have scoping errors (e.g., using a variable in the same block it's defined).
+
+#### 2. Verify NAS Writability
+Exec into a pod and try to write a test file:
+```bash
+kubectl exec -it <pod-name> -n platform-ops -- touch /mnt/nas-logs/test_write.txt
+```
+
+#### 3. Reset Position Files
+If logs are skipped after a rotation or node restart, Fluentd might have stale offsets in its `.pos` files.
+**Recovery**:
+1. Clear `.pos` files from all pods:
+   ```bash
+   kubectl exec -it <pod-name> -n platform-ops -- rm /var/log/fluentd-containers.log.pos
+   ```
+2. Restart the DaemonSet:
+   ```bash
+   kubectl rollout restart ds fluentd-daemonset -n platform-ops
+   ```
+   *Note: This will cause Fluentd to re-scan log files from the beginning, which may result in some duplicate entries for the current day.*
+
+---
+Last updated: Mar 2026

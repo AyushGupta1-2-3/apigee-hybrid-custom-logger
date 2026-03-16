@@ -32,6 +32,7 @@ fi
 
 DS_TEMPLATE="k8s/sinks/nas/daemonset.yaml.template"
 DS_OUTPUT="k8s/sinks/nas/daemonset.yaml"
+CM_TEMPLATE="k8s/sinks/nas/configmap.yaml.template"
 CM_OUTPUT="k8s/sinks/nas/configmap.yaml"
 JN_TEMPLATE="k8s/sinks/nas/janitor.yaml.template"
 JN_OUTPUT="k8s/sinks/nas/janitor.yaml"

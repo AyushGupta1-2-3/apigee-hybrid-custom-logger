@@ -124,41 +124,43 @@ data:
     </filter>
 
     # =========================================================================
-    # STEP 4: TRANSFORMATION - Standardize fields and map values
+    # STEP 4a: METADATA EXTRACTION - Find apps and parse klog structures
     # =========================================================================
-    # This step ensures all logs (JSON or klog) have consistent field names 
-    # and standardizes severity levels.
     <filter kubernetes.**>
       @type record_transformer
       enable_ruby true
       <record>
-        # --- Metadata for Output Path Logic ---
         k8s_ns   ${record.dig("kubernetes", "namespace_name")}
         k8s_cont ${record.dig("kubernetes", "container_name")}
         k8s_host ${ENV['K8S_NODE_NAME']}
         k8s_app  ${record.dig("kubernetes", "labels", "com.apigee.apigeedeployment") || record.dig("kubernetes", "labels", "com_apigee_apigeedeployment") || record.dig("kubernetes", "labels", "telemetry") || record.dig("kubernetes", "labels", "k8s-app") || record.dig("kubernetes", "labels", "component") || (record.dig("kubernetes", "labels", "app") == "app" ? nil : record.dig("kubernetes", "labels", "app")) || record.dig("kubernetes", "container_name") || "unknown"}
-
-        # --- Standardized Resource Context ---
-        res_ns   ${record.dig("kubernetes", "namespace_name")}
-        res_pod  ${record.dig("kubernetes", "pod_name")}
-        res_cont ${record.dig("kubernetes", "container_name")}
-        res_node ${ENV['K8S_NODE_NAME']}
-       
-        # --- Standardized Content ---
-        # Logic: If log/message matches klog, extract parts. Otherwise fallback to raw.
-        # This handles cases where the parser filter might fail due to field naming or spacing.
-        raw_log  ${record['log'] || record['message']}
+        
+        # Internal temporary block for klog parsing
         klog_parts ${ if (m = (record['log'] || record['message'] || "").strip.match(/^([IWEF])\s*(\d{4}\s+[\d:]+\.\d+)\s+(\d+)\s+([^:]+):(\d+)\]\s*(.*)/)); {level: m[1], time: m[2], thread: m[3], file: m[4], line: m[5], msg: m[6]}; else; nil; end }
-        
-        msg_val  ${ record['msg_val'] || (klog_parts ? klog_parts[:msg] : (record['message'] || record['log'])) }
-        
-        # --- Severity Normalization ---
-        sev_val  ${ if record['level']; record['level'].upcase; elsif klog_parts; (klog_parts[:level] == 'I' ? 'INFO' : (klog_parts[:level] == 'W' ? 'WARN' : (klog_parts[:level] == 'E' ? 'ERROR' : (klog_parts[:level] == 'F' ? 'FATAL' : 'INFO')))); else; ((record['message'] || record['log'] || "").downcase.include?("error") || record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
+      </record>
+    </filter>
+
+    # =========================================================================
+    # STEP 4b: NORMALIZATION - Finalize message, severity, and timestamp
+    # =========================================================================
+    <filter kubernetes.**>
+      @type record_transformer
+      enable_ruby true
+      <record>
+        # res_* fields for the final JSON payload
+        res_ns   ${record["k8s_ns"]}
+        res_pod  ${record.dig("kubernetes", "pod_name")}
+        res_cont ${record["k8s_cont"]}
+        res_node ${record["k8s_host"]}
+       
+        # Fallback logic for message and severity using klog_parts if present
+        msg_val  ${ record['msg_val'] || (record['klog_parts'] ? record['klog_parts']['msg'] : (record['message'] || record['log'])) }
+        sev_val  ${ if record['level']; record['level'].upcase; elsif record['klog_parts']; (lp = record['klog_parts']['level']; lp == 'I' ? 'INFO' : (lp == 'W' ? 'WARN' : (lp == 'E' ? 'ERROR' : (lp == 'F' ? 'FATAL' : 'INFO')))); else; ((record['message'] || record['log'] || "").downcase.include?("error") || record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
         time_val ${time.strftime('%Y-%m-%dT%H:%M:%S.%NZ')}
       </record>
      
       # Cleanup: remove intermediate fields to minimize payload size
-      remove_keys kubernetes, docker, stream, log, level, thread, logger, time_klog, level_klog, threadid, file, line
+      remove_keys kubernetes, docker, stream, log, level, thread, logger, time_klog, level_klog, threadid, file, line, klog_parts
     </filter>
 
     # =========================================================================
