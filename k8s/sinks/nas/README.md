@@ -32,7 +32,12 @@ The `kubernetes_metadata` filter injects cluster-specific context.
 
 ### 3. Parsing
 The `parser` filter extracts the application payload from either the `log` or `message` fields. Checking both ensures compatibility across various container runtimes (e.g., Docker, Containerd).
-- **Supported Formats**: Automatically detects and parses **JSON**, **klog** (Standard & Relaxed), **logfmt**, **Zap** (controller-runtime), and **Go Standard Library**.
+- **Supported Formats**: Automatically detects and parses:
+  - **JSON**: Apigee Runtime, Sync, UDCA.
+  - **klog**: Apigee Metrics Adapter, `cert-manager`, `kube-apiserver`.
+  - **logfmt**: Prometheus `node_exporter`, `alertmanager`.
+  - **Zap**: Apigee Controller, `metrics-server-operator`.
+  - **Go Standard Library**: Helper utilities and generic binaries.
 - **Dual-Field Recovery**: If the payload is missing in `log`, the pipeline automatically attempts to parse the `message` field.
 
 ### 4. Normalization

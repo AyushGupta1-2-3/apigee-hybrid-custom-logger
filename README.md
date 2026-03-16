@@ -75,11 +75,11 @@ graph LR
 ```
 
 ### Format Details
-- **JSON**: Standard structured logs.
-- **klog**: The default logging format for Kubernetes system components and Go-based applications. Includes support for "relaxed" variations with unusual whitespace (e.g., `kube-apiserver`).
-- **logfmt**: Standard format for components like `node_exporter`, `alertmanager`, etc.
-- **Zap**: Structured text logs commonly used by Kubernetes Operators and `controller-runtime`.
-- **Go Std Lib**: The default format used by the Go `log` package.
+- **JSON**: Standard structured logs. Used by **Apigee Runtime, Sync, and UDCA**.
+- **klog**: The default logging format for Kubernetes system components and Go-based applications. Includes support for "relaxed" variations with unusual whitespace. Used by **Apigee Metrics Adapter, `cert-manager`, and `kube-apiserver`**.
+- **logfmt**: Standard format for monitoring components. Used by **Prometheus `node_exporter` and `alertmanager`**.
+- **Zap**: Structured text logs commonly used by Kubernetes Operators and `controller-runtime`. Used by **Apigee Controller and `metrics-server-operator`**.
+- **Go Std Lib**: The default format used by the Go `log` package. Used by **helper utilities and generic Go binaries**.
 
 *Note: Automated field extraction and severity mapping are currently optimized for these two formats.*
 
