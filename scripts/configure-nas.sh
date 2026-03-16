@@ -31,8 +31,9 @@ fi
 
 DS_TEMPLATE="k8s/sinks/nas/daemonset.yaml.template"
 DS_OUTPUT="k8s/sinks/nas/daemonset.yaml"
-CM_TEMPLATE="k8s/sinks/nas/configmap.yaml.template"
 CM_OUTPUT="k8s/sinks/nas/configmap.yaml"
+JN_TEMPLATE="k8s/sinks/nas/janitor.yaml.template"
+JN_OUTPUT="k8s/sinks/nas/janitor.yaml"
 
 if [ -z "$NAS_IP" ] || [ -z "$NAS_SHARE" ]; then
     echo "Usage: $0 <NAS_IP_ADDRESS> <NAS_SHARE_NAME> [INTERNAL_MOUNT_PATH]"
@@ -65,6 +66,16 @@ if [ -f "$CM_TEMPLATE" ]; then
     echo "Successfully generated $CM_OUTPUT"
 else
     echo "Warning: $CM_TEMPLATE not found"
+fi
+
+# 3. Process Janitor CronJob
+if [ -f "$JN_TEMPLATE" ]; then
+    cp "$JN_TEMPLATE" "$JN_OUTPUT"
+    eval "$SED_CMD \"s|<YOUR_NAS_IP>|$NAS_IP|g\" $JN_OUTPUT"
+    eval "$SED_CMD \"s|<YOUR_NAS_PATH>|$NAS_SHARE|g\" $JN_OUTPUT"
+    echo "Successfully generated $JN_OUTPUT"
+else
+    echo "Warning: $JN_TEMPLATE not found"
 fi
 
 echo "Configuration Summary:"

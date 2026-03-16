@@ -26,6 +26,7 @@ In Apigee Hybrid, logging is typically handled by Google Cloud Logging. However,
 - **Enriches Metadata**: Adds Kubernetes pod, namespace, and container information.
 - **Filters by Severity**: Allows filtering (e.g., only ERROR and WARN logs).
 - **Transforms Payloads**: Formats logs into a custom JSON structure.
+- **Log Retention**: Automated log rotation and cleanup via a scheduled CronJob.
 - **Exports to Storage**: Writes logs to a mounted NAS/NFS share.
 
 ## Architecture
@@ -117,6 +118,7 @@ The following table summarizes the component support for each log format:
       ```bash
       kubectl apply -f k8s/sinks/nas/configmap.yaml
       kubectl apply -f k8s/sinks/nas/daemonset.yaml
+      kubectl apply -f k8s/sinks/nas/janitor.yaml
       ```
 
 ## Configuration

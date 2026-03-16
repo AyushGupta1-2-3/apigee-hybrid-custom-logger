@@ -1,0 +1,62 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nas-janitor
+  namespace: platform-ops
+spec:
+  # Schedule: Run at 01:00 AM every day
+  schedule: "0 1 * * *"
+  # Keep a history of successful jobs (optional)
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: janitor
+            # Use a tiny Linux image (Alpine)
+            image: alpine:3.18
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting Janitor Cleanup..."
+              echo "Looking for folders in /mnt/nas-logs older than 30 days..."
+              
+              # THE CLEANUP COMMAND:
+              # find /mnt/nas-logs  -> Look in this folder
+              # -mindepth 1         -> Ignore the root folder itself
+              # -maxdepth 1         -> Only look at the Date folders (e.g. 2025-11-01)
+              # -type d             -> Look for Directories only
+              # -mtime +30          -> Modified more than 30 days ago
+              # -exec rm -rf {}     -> DELETE IT
+              
+              find /mnt/nas-logs -mindepth 1 -maxdepth 1 -type d -mtime +30 -print -exec rm -rf {} +
+              
+              echo "Cleanup Complete."
+            volumeMounts:
+            - name: nas-storage
+              mountPath: /mnt/nas-logs
+              readOnly: false
+          restartPolicy: OnFailure
+          volumes:
+          - name: nas-storage
+            nfs:
+              # Values injected by configure-nas.sh
+              server: <YOUR_NAS_IP>
+              path: <YOUR_NAS_PATH>

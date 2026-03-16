@@ -220,11 +220,31 @@ I0316 05:05:35.347703 1 reconciler.go:141] "Updated object" logger="cert-manager
 }
 ```
 
-## Verification & Troubleshooting
-
-To verify that logs are flowing correctly to your NAS storage, follow the detailed steps in the **[Verification & Testing Guide](../../../docs/verification-guide.md)**.
-
-**Quick Checks:**
-- **From Pod**: `kubectl exec -it <pod-name> -n platform-ops -- ls -lrt <YOUR_NAS_MOUNT_PATH>`
-- **Write Test**: `kubectl exec -it <pod-name> -n platform-ops -- touch <YOUR_NAS_MOUNT_PATH>/test.txt`
 - **Check Logs**: `kubectl logs -n platform-ops -l app=fluentd-daemonset`
+
+## Log Retention & Rotation
+
+To prevent the NAS storage from filling up, a **Janitor CronJob** is provided to automatically clean up old logs.
+
+### Feature Details:
+- **Component**: `nas-janitor` (CronJob)
+- **Schedule**: Daily at 01:00 AM (`0 1 * * *`)
+- **Retention Policy**: Deletes date-based directories older than **30 days**.
+- **Operation**: Uses a lightweight Alpine image to execute a `find` cleanup command on the mounted NAS share.
+
+### Deployment:
+The Janitor is automatically configured when you run the `./scripts/configure-nas.sh` script.
+
+1.  **Generate the manifest**:
+    ```bash
+    ./scripts/configure-nas.sh <NAS_IP> <NAS_SHARE>
+    ```
+2.  **Deploy the CronJob**:
+    ```bash
+    kubectl apply -f k8s/sinks/nas/janitor.yaml
+    ```
+3.  **Manual Cleanup (Optional)**:
+    If you need to trigger a cleanup immediately:
+    ```bash
+    kubectl create job --from=cronjob/nas-janitor manual-cleanup -n platform-ops
+    ```

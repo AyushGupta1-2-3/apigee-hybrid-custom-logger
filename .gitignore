@@ -11,6 +11,7 @@ Thumbs.db
 # Kubernetes manifests (generated)
 k8s/sinks/nas/daemonset.yaml
 k8s/sinks/nas/configmap.yaml
+k8s/sinks/nas/janitor.yaml
 
 # Misc
 .idea/
