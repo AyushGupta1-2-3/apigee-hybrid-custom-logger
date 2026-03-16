@@ -129,6 +129,17 @@ For detailed information on setting up your storage backend and the log processi
 
 To verify your installation and test the end-to-end log flow, follow the **[Verification & Testing Guide](docs/verification-guide.md)**.
 
+## Log Retention (NAS Janitor)
+
+To prevent the NAS storage from filling up over time, this project includes a **Janitor CronJob** that handles automated log rotation.
+
+- **Component**: `nas-janitor` (Kubernetes CronJob)
+- **Schedule**: Every day at 01:00 AM.
+- **Retention Policy**: Automatically deletes log directories older than **30 days**.
+- **Efficiency**: Uses a lightweight Alpine-based container to perform targeted cleanup on the mounted NAS share.
+
+See the [NAS Sink README](k8s/sinks/nas/README.md#log-retention--rotation) for detailed deployment and customization instructions.
+
 ## Log Processing Example
 
 The solution transforms raw platform logs into a clean, standardized JSON format.

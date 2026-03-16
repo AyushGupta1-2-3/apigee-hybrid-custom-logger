@@ -56,6 +56,9 @@ The final `record_transformer` compiles the standardized fields into a single JS
 ### 7. Output
 The `match` plugin writes the `final_payload` to the NAS mounting point using a directory structure based on date and namespace.
 
+### 8. Log Lifecycle (Log Rotation)
+To prevent disk exhaustion, the **NAS Janitor** (CronJob) automatically rotates logs by deleting date-based directories older than 30 days.
+
 ## Step-by-Step Transformation Trace
 
 To better understand the pipeline, let's trace a single error log from an Apigee Runtime container.
