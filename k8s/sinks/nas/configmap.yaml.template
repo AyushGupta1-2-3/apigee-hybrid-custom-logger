@@ -125,10 +125,15 @@ data:
         res_node ${ENV['K8S_NODE_NAME']}
        
         # --- Standardized Content ---
-        msg_val  ${record['message'] || record['log']}
+        # Logic: If log/message matches klog, extract parts. Otherwise fallback to raw.
+        # This handles cases where the parser filter might fail due to field naming or spacing.
+        raw_log  ${record['log'] || record['message']}
+        klog_parts ${ if (m = (record['log'] || record['message']).match(/^([IWEF])(\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(\d+)\s+([^:]+):(\d+)\]\s*(.*)/)); {level: m[1], time: m[2], thread: m[3], file: m[4], line: m[5], msg: m[6]}; else; nil; end }
+        
+        msg_val  ${ record['msg_val'] || (klog_parts ? klog_parts[:msg] : (record['message'] || record['log'])) }
         
         # --- Severity Normalization ---
-        sev_val  ${ if record['level']; record['level'].upcase; elsif record['level_klog'] == 'I'; 'INFO'; elsif record['level_klog'] == 'W'; 'WARN'; elsif record['level_klog'] == 'E'; 'ERROR'; elsif record['level_klog'] == 'F'; 'FATAL'; else; (record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
+        sev_val  ${ if record['level']; record['level'].upcase; elsif klog_parts; (klog_parts[:level] == 'I' ? 'INFO' : (klog_parts[:level] == 'W' ? 'WARN' : (klog_parts[:level] == 'E' ? 'ERROR' : (klog_parts[:level] == 'F' ? 'FATAL' : 'INFO')))); else; (record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
         time_val ${time.strftime('%Y-%m-%dT%H:%M:%S.%NZ')}
       </record>
      
