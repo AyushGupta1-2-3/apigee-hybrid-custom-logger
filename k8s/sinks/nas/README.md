@@ -31,12 +31,13 @@ The `kubernetes_metadata` filter injects cluster-specific context.
 - **Added Fields**: `kubernetes.pod_name`, `kubernetes.namespace_name`, `kubernetes.labels.app`, etc.
 
 ### 3. Parsing
-The `parser` filter extracts the application payload from the `log` field (supports JSON and klog).
-- **New Fields**: `level: "error"`, `message: "disk full"` (if JSON) or `level_klog`, `msg_val` (if klog).
-- **Note**: Currently supported formats for automated parsing are JSON, klog and logfmt.
+The `parser` filter extracts the application payload from either the `log` or `message` fields. Checking both ensures compatibility across various container runtimes (e.g., Docker, Containerd).
+- **Supported Formats**: Automatically detects and parses **JSON**, **klog** (Standard & Relaxed), **logfmt**, **Zap** (controller-runtime), and **Go Standard Library**.
+- **Dual-Field Recovery**: If the payload is missing in `log`, the pipeline automatically attempts to parse the `message` field.
 
 ### 4. Normalization
 The `record_transformer` maps various field names to a standard set (e.g., `sev_val`, `msg_val`).
+- **Robust klog Parsing**: Includes a Ruby-based fallback that handles leading whitespace and varied spacing (common in `cert-manager` logs).
 - **State**: `sev_val: "ERROR"`, `msg_val: "disk full"`, `res_pod: "apigee-runtime-abc"`
 
 ### 5. Filtering
@@ -190,6 +191,27 @@ I0316 05:05:35.347703 1 reconciler.go:141] "Updated object" logger="cert-manager
   "message": "collector=zfs",
   "severity": "INFO",
   "timestamp": "2026-03-12T03:26:22.182000Z"
+}
+```
+
+### Case 4: Zap Format (Metrics Server Operator)
+**Raw Log (from node):**
+```text
+2026-03-16T11:12:57Z    ERROR   Reconciler error        {"controller": "metrics-server-controller", "error": "exit status 1"}
+```
+
+**Final Processed Log (on NAS):**
+```json
+{
+  "resource": {
+    "namespace": "kube-system",
+    "pod": "metrics-server-operator-xyz",
+    "container": "metrics-server-operator",
+    "node": "gke-node-1"
+  },
+  "message": "Reconciler error        {\"controller\": \"metrics-server-controller\", \"error\": \"exit status 1\"}",
+  "severity": "ERROR",
+  "timestamp": "2026-03-16T11:12:57Z"
 }
 ```
 

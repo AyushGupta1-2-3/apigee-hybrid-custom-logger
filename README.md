@@ -22,7 +22,7 @@ A lightweight, high-performance custom logging solution for Apigee Hybrid using 
 
 In Apigee Hybrid, logging is typically handled by Google Cloud Logging. However, many enterprise customers require logs to be exported to on-premises storage or specific log management systems. This project provides a Fluentd-based DaemonSet that:
 - **Taps into Kubernetes logs**: Reads logs directly from `/var/log/containers/`.
-- **Supports Multiple Formats**: Automatically parses JSON, `klog`, and `logfmt` formatted logs.
+- **Supports Multiple Formats**: Automatically parses JSON, `klog` (standard and relaxed), `logfmt`, **Zap** (controller-runtime), and **Go Standard Library** formatted logs.
 - **Enriches Metadata**: Adds Kubernetes pod, namespace, and container information.
 - **Filters by Severity**: Allows filtering (e.g., only ERROR and WARN logs).
 - **Transforms Payloads**: Formats logs into a custom JSON structure.
@@ -64,8 +64,10 @@ graph LR
     F --> R[Roadmap / Future]
     
     S --> J[JSON - Standard]
-    S --> K[klog - K8s/Go]
+    S --> K[klog - Standard/Relaxed]
     S --> L[logfmt - Prometheus]
+    S --> Z[Zap - controller-runtime]
+    S --> G[Go Standard Library]
     
     R --> SY[Syslog]
     R --> CL[Common Log Format]
@@ -74,8 +76,10 @@ graph LR
 
 ### Format Details
 - **JSON**: Standard structured logs.
-- **klog**: The default logging format for Kubernetes system components and Go-based applications.
+- **klog**: The default logging format for Kubernetes system components and Go-based applications. Includes support for "relaxed" variations with unusual whitespace (e.g., `kube-apiserver`).
 - **logfmt**: Standard format for components like `node_exporter`, `alertmanager`, etc.
+- **Zap**: Structured text logs commonly used by Kubernetes Operators and `controller-runtime`.
+- **Go Std Lib**: The default format used by the Go `log` package.
 
 *Note: Automated field extraction and severity mapping are currently optimized for these two formats.*
 
