@@ -93,7 +93,7 @@ data:
         k8s_ns   ${record.dig("kubernetes", "namespace_name")}
         k8s_cont ${record.dig("kubernetes", "container_name")}
         k8s_host ${ENV['K8S_NODE_NAME']}
-        k8s_app  ${record.dig("kubernetes", "labels", "com.apigee.apigeedeployment") || record.dig("kubernetes", "labels", "telemetry") || record.dig("kubernetes", "labels", "k8s-app") || record.dig("kubernetes", "labels", "component") || (record.dig("kubernetes", "labels", "app") == "app" ? nil : record.dig("kubernetes", "labels", "app")) || record.dig("kubernetes", "container_name") || "unknown"}
+        k8s_app  ${record.dig("kubernetes", "labels", "com.apigee.apigeedeployment") || record.dig("kubernetes", "labels", "com_apigee_apigeedeployment") || record.dig("kubernetes", "labels", "telemetry") || record.dig("kubernetes", "labels", "k8s-app") || record.dig("kubernetes", "labels", "component") || (record.dig("kubernetes", "labels", "app") == "app" ? nil : record.dig("kubernetes", "labels", "app")) || record.dig("kubernetes", "container_name") || "unknown"}
 
         # --- Standardized Resource Context ---
         res_ns   ${record.dig("kubernetes", "namespace_name")}
