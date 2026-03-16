@@ -128,7 +128,7 @@ data:
         # Logic: If log/message matches klog, extract parts. Otherwise fallback to raw.
         # This handles cases where the parser filter might fail due to field naming or spacing.
         raw_log  ${record['log'] || record['message']}
-        klog_parts ${ if (m = (record['log'] || record['message']).match(/^([IWEF])(\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(\d+)\s+([^:]+):(\d+)\]\s*(.*)/)); {level: m[1], time: m[2], thread: m[3], file: m[4], line: m[5], msg: m[6]}; else; nil; end }
+        klog_parts ${ if (m = (record['log'] || record['message'] || "").strip.match(/^([IWEF])(\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{6})\s+(\d+)\s+([^:]+):(\d+)\]\s*(.*)/)); {level: m[1], time: m[2], thread: m[3], file: m[4], line: m[5], msg: m[6]}; else; nil; end }
         
         msg_val  ${ record['msg_val'] || (klog_parts ? klog_parts[:msg] : (record['message'] || record['log'])) }
         
