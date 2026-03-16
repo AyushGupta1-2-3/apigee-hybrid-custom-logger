@@ -74,14 +74,21 @@ graph LR
     R --> ML[Custom Multiline]
 ```
 
-### Format Details
-- **JSON**: Standard structured logs. Used by **Apigee Runtime, Sync, and UDCA**.
-- **klog**: The default logging format for Kubernetes system components and Go-based applications. Includes support for "relaxed" variations with unusual whitespace. Used by **Apigee Metrics Adapter, `cert-manager`, and `kube-apiserver`**.
-- **logfmt**: Standard format for monitoring components. Used by **Prometheus `node_exporter` and `alertmanager`**.
-- **Zap**: Structured text logs commonly used by Kubernetes Operators and `controller-runtime`. Used by **Apigee Controller and `metrics-server-operator`**.
-- **Go Std Lib**: The default format used by the Go `log` package. Used by **helper utilities and generic Go binaries**.
+### Verification & Support Matrix
 
-*Note: Automated field extraction and severity mapping are currently optimized for these two formats.*
+The following table summarizes the component-level verification performing for each supported log format:
+
+| Category | Component Examples | Log Format | Status | Verification Method |
+| :--- | :--- | :--- | :--- | :--- |
+| **Apigee Core** | Runtime, Sync, UDCA | JSON | ✅ | Regex & Flow Test |
+| **Apigee Metrics** | Metrics Adapter | klog (Standard) | ✅ | Regex Test |
+| **Infrastructure** | kube-apiserver, cert-manager | klog (Relaxed) | ✅ | Regex Test (User Sample) |
+| **Monitoring** | node_exporter, alertmanager | logfmt | ✅ | Regex Test |
+| **K8s Operators** | apigee-controller, metrics-operator | Zap / Controller-runtime | ✅ | Regex Test (User Sample) |
+| **Utilities** | Helper binaries, Generic Go | Go Standard Library | ✅ | Regex Test (User Sample) |
+| **Generic** | Anything else on stdout/stderr | Plain Text | ✅ | Fallback & "Error" Keyword Heuristic |
+
+*Note: Automated field extraction and severity mapping are currently optimized for these formats.*
 
 ## Installation
 
