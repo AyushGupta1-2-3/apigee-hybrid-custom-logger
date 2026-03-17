@@ -153,10 +153,10 @@ data:
         res_cont ${record["k8s_cont"]}
         res_node ${record["k8s_host"]}
        
-        # Fallback logic for message and severity using klog_parts if present
-        msg_val  ${ record['msg_val'] || (record['klog_parts'] ? record['klog_parts']['msg'] : (record['message'] || record['log'])) }
-        sev_val  ${ if record['level']; record['level'].upcase; elsif record['klog_parts']; (lp = record['klog_parts']['level']; lp == 'I' ? 'INFO' : (lp == 'W' ? 'WARN' : (lp == 'E' ? 'ERROR' : (lp == 'F' ? 'FATAL' : 'INFO')))); else; ((record['message'] || record['log'] || "").downcase.include?("error") || record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
-        time_val ${time.strftime('%Y-%m-%dT%H:%M:%S.%NZ')}
+        # Fallback logic for message and severity using parsed fields if present
+        msg_val  ${ record['msg_val'] || (record['klog_parts'] ? record['klog_parts']['msg'] : (record['msg'] || record['message'] || record['log'])) }
+        sev_val  ${ if record['level']; record['level'].upcase; elsif record['level_klog']; (lk = record['level_klog']; lk == 'I' ? 'INFO' : (lk == 'W' ? 'WARN' : (lk == 'E' ? 'ERROR' : (lk == 'F' ? 'FATAL' : 'INFO')))); elsif record['klog_parts']; (lp = record['klog_parts']['level']; lp == 'I' ? 'INFO' : (lp == 'W' ? 'WARN' : (lp == 'E' ? 'ERROR' : (lp == 'F' ? 'FATAL' : 'INFO')))); else; ((record['msg'] || record['message'] || record['log'] || "").downcase.include?("error") || record['stream'] == 'stderr' ? 'ERROR' : 'INFO'); end }
+        time_val ${record['time_klog'] ? (begin; Time.strptime(record['time_klog'], '%m%d %H:%M:%S.%N').strftime('%Y-%m-%dT%H:%M:%S.%NZ'); rescue; record['time_val']; end) : (record['ts'] || record['time_val'] || time.strftime('%Y-%m-%dT%H:%M:%S.%NZ'))}
       </record>
      
       # Cleanup: remove intermediate fields to minimize payload size
