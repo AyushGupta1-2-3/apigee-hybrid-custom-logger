@@ -70,6 +70,8 @@ graph LR
     S --> L[logfmt - Prometheus]
     S --> Z[Zap - controller-runtime]
     S --> G[Go Standard Library]
+    S --> E[etcd - Standard]
+    S --> C[Catch-all - Plain Text]
     
     R --> SY[Syslog]
     R --> CL[Common Log Format]
@@ -87,8 +89,9 @@ The following table summarizes the component support for each log format:
 | **Infrastructure** | kube-apiserver, cert-manager | klog (Relaxed) |
 | **Monitoring** | node_exporter, alertmanager | logfmt |
 | **K8s Operators** | apigee-controller, metrics-operator | Zap / Controller-runtime |
+| **Infrastructure** | etcd | etcd (Standard) |
 | **Utilities** | Helper binaries, Generic Go | Go Standard Library |
-| **Generic** | Anything else on stdout/stderr | Plain Text (Fallback) |
+| **Generic** | Anything else on stdout/stderr | Catch-all (Fallback) |
 
 *Note: Automated field extraction and severity mapping are currently optimized for these formats.*
 
@@ -190,6 +193,34 @@ The solution transforms raw platform logs into a clean, standardized JSON format
   "timestamp": "2026-03-12T03:26:22.182000Z"
 }
 ```
+
+### Case 3: etcd Format (Infrastructure)
+**Raw Log (from node):**
+```text
+2026-03-18 10:56:10.209165 I | etcdserver: compacted raft log at 224686110
+```
+
+**Final Processed Log (on NAS):**
+```json
+{
+  "resource": {
+    "namespace": "kube-system",
+    "pod": "etcd-member-node-1",
+    "container": "etcd",
+    "node": "gke-node-1"
+  },
+  "message": "etcdserver: compacted raft log at 224686110",
+  "severity": "INFO",
+  "timestamp": "2026-03-18T10:56:10.209165Z"
+}
+```
+
+## Catch-all Parser Mechanism
+
+The solution includes a generic **Catch-all Parser** as the final step in the `multi_format` pipeline. This ensures that:
+- **No logs are lost**: Any log line that does not match specific patterns (JSON, klog, etc.) is still captured as a raw string in the `message` field.
+- **Robustness**: The pipeline continues to enrich these logs with Kubernetes metadata even if the internal application format is unknown.
+- **Fallback Severity**: If no structured level is found, the system scans the message for keywords like "error" to assign a best-effort severity.
 
 ### Extending with New Destinations
 To add a new destination, see the [Sink Development Guide](docs/sink-development.md).
