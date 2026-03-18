@@ -251,6 +251,30 @@ The Janitor is automatically configured when you run the `./scripts/configure-na
     ```bash
     kubectl create job --from=cronjob/nas-janitor manual-cleanup -n platform-ops
     ```
+## Running on Control Plane Nodes
+
+In hybrid or managed environments (like Anthos or GKE), certain nodes (e.g., control plane, master nodes) are often **tainted** to prevent regular workloads from running. 
+
+By default, the `fluentd-daemonset` will **not** run on these nodes unless explicit **tolerations** are added. If you find that logs are missing for pods running on these specific nodes, you must update the DaemonSet spec.
+
+### Recommended Tolerations
+To ensure coverage across all nodes, consider adding the following to your `daemonset.yaml.template`:
+
+```yaml
+spec:
+  template:
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+```
+
 ## Troubleshooting
 
 ### Log Silence (No logs appearing on NAS)
@@ -281,6 +305,12 @@ If logs are skipped after a rotation or node restart, Fluentd might have stale o
    kubectl rollout restart ds fluentd-daemonset -n platform-ops
    ```
    *Note: This will cause Fluentd to re-scan log files from the beginning, which may result in some duplicate entries for the current day.*
+
+#### 4. Missing Pods on Specific Nodes (Taints)
+If `kubectl get pods -o wide` shows that Fluentd is not running on certain nodes (like masters):
+- **Check node taints**: `kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints`
+- **Verify tolerations**: Check if the DaemonSet has matching tolerations for those taints. 
+- **Fix**: See the [Running on Control Plane Nodes](#running-on-control-plane-nodes) section above.
 
 ---
 Last updated: Mar 2026

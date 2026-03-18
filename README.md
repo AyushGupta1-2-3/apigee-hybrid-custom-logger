@@ -47,6 +47,7 @@ graph TD
 - **Apigee Hybrid Cluster**: A running Kubernetes cluster with Apigee Hybrid installed.
 - **NEXUS/NFS Storage**: A storage backend accessible from your Kubernetes nodes.
 - **`kubectl`**: Configured to access your cluster.
+- **Node Taints**: If running in a hybrid or admin/user cluster environment, you may need to add [tolerations](k8s/sinks/nas/README.md#running-on-control-plane-nodes) to allow pods to run on control plane nodes.
 
 ## Supported Destinations
 
@@ -139,6 +140,10 @@ To prevent the NAS storage from filling up over time, this project includes a **
 - **Efficiency**: Uses a lightweight Alpine-based container to perform targeted cleanup on the mounted NAS share.
 
 See the [NAS Sink README](k8s/sinks/nas/README.md#log-retention--rotation) for detailed deployment and customization instructions.
+
+## Hybrid & Admin/User Cluster Considerations
+
+In hybrid environments (like Anthos), control plane components often run on tainted nodes. By default, the custom logger will not run on these nodes. See the [Running on Control Plane Nodes](k8s/sinks/nas/README.md#running-on-control-plane-nodes) section for guidance on adding the necessary tolerations.
 
 ## Log Processing Example
 
