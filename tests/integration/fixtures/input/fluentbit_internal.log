@@ -1,0 +1,1 @@
+2026-03-18T12:12:05.123Z stdout F [2026/03/18 12:12:05] [ info] [input:tail:tail.1] inotify_fs_add(): inode=2322447 watch_fd=2600 name=/var/log/containers/cap-controller-manager-1.32.700-gke.64-865476b5dc-kmw75_kube-system_manager-c5bdfc4e205854cd12044a608c62d4ef9ae026f1c4333d5fd688518a9613f283.log
