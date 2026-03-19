@@ -18,3 +18,6 @@ k8s/sinks/nas/janitor.yaml
 .vscode/
 *.swp
 *.bak
+
+# Integration tests runtime artifacts
+tests/integration/fixtures/actual/
