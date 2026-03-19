@@ -1,0 +1,11 @@
+{
+  "resource": {
+    "namespace": "test-ns",
+    "pod": "test-pod",
+    "container": "test-cont",
+    "node": "test-node"
+  },
+  "message": "ConvertFrom: Converting IPAddress ipc-default-apigee-runtime-np-5c9fbc966f-dn5gs from Hub version v1alpha2 to Spoke version v1alpha1",
+  "severity": "INFO",
+  "timestamp": "2026-02-14T05:27:17.530Z"
+}

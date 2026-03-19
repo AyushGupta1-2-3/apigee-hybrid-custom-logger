@@ -1,0 +1,11 @@
+{
+  "resource": {
+    "namespace": "test-ns",
+    "pod": "test-pod",
+    "container": "test-cont",
+    "node": "test-node"
+  },
+  "message": "Error encountered, while attempting to fetch default CR. Error status: UNAVAILABLE: Unable to connect to &#39;https://kubernetes.default.svc/apis/authentication.gke.io/v2alpha1/namespaces/kube-public/clientconfigs/default&#39;, encountered the following error: Timeout was reached. Details: Resolving timed out after 3001 milliseconds. Performing polling backoff for 5.5593452675s",
+  "severity": "INFO",
+  "timestamp": "2026-03-19T11:45:00.000000000Z"
+}

@@ -113,10 +113,11 @@ def parse_line(raw_line)
   res_cont = record["k8s_cont"]
   res_node = record["k8s_host"]
   
-  msg_val = record['msg_val'] || (record['klog_parts'] ? record['klog_parts'][:msg] : (record['msg'] || record['message'] || record['log']))
+  # Robust fallback: use klog_parts if available AND lookup succeeds, otherwise use message/log
+  msg_val = record['msg_val'] || (record['klog_parts'] && record['klog_parts']['msg']) || record['msg'] || record['message'] || record['log']
   
   # Severity Mapping
-  raw_level = record['level'] || record['level_klog'] || (record['klog_parts'] ? record['klog_parts'][:level] : nil)
+  raw_level = record['level'] || record['level_klog'] || (record['klog_parts'] ? record['klog_parts']['level'] : nil)
   
   sev_val = "INFO"
   if raw_level
