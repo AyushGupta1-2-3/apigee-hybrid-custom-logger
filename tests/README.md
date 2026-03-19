@@ -12,8 +12,30 @@ These tests validate the end-to-end log processing pipeline using a native Ruby 
 - **High Fidelity**: The test engine uses the exact same regex patterns and Ruby logic defined in the production `ConfigMap`.
 - **Zero Dependencies**: Requires only Ruby (pre-installed on most systems), with no need for a running Kubernetes cluster or Docker.
 
-### 2. Generic Tests
-Currently, the focus is on integration testing of the log parsing logic, which is the core of the custom logger's functionality. Generic tests for script utilities and manifest validation are primarily handled via `kubectl --dry-run`.
+### 2. Live Environment Testing
+In addition to local integration tests, you can test the logger directly in a Kubernetes cluster.
+
+**Testing the Catch-all Parser (Plain Text):**
+To verify that Fluentd successfully captures and parses unstructured plain text logs that don't match specific formats, create a temporary pod in your cluster:
+
+```bash
+# 1. Generate a live unstructured log message
+kubectl run test-catchall --image=busybox --restart=Never -- /bin/sh -c "echo 'This is a LIVE unformatted test message for the catch-all parser' && sleep 3600"
+
+# 2. Exec into your fluentd pod and navigate to today's NAS mount folder
+kubectl exec -it <YOUR_FLUENTD_POD_NAME> -n platform-ops -- sh
+cd /mnt/nas-logs/$(date +%Y-%m-%d)
+
+# 3. Find the log file and verify its contents
+cat default_test-catchall_*.log
+```
+
+The output should correctly format your plain text message into the standard JSON structure with the default `INFO` severity. 
+
+**Cleanup:**
+```bash
+kubectl delete pod test-catchall
+```
 
 ---
 
