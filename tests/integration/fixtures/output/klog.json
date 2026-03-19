@@ -1,0 +1,11 @@
+{
+  "resource": {
+    "namespace": "test-ns",
+    "pod": "test-pod",
+    "container": "test-cont",
+    "node": "test-node"
+  },
+  "message": "\"HTTP\" verb=\"GET\" URI=\"/apis/custom.metrics...\" resp=200",
+  "severity": "INFO",
+  "timestamp": "2026-03-12T03:26:22.182Z"
+}

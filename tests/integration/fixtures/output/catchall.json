@@ -1,0 +1,11 @@
+{
+  "resource": {
+    "namespace": "test-ns",
+    "pod": "test-pod",
+    "container": "test-cont",
+    "node": "test-node"
+  },
+  "message": "This is a plain text log message with no structure.",
+  "severity": "INFO",
+  "timestamp": "2026-03-12T03:28:10.653Z"
+}

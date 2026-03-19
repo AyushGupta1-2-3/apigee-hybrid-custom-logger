@@ -133,6 +133,24 @@ For detailed information on setting up your storage backend and the log processi
 
 To verify your installation and test the end-to-end log flow, follow the **[Verification & Testing Guide](docs/verification-guide.md)**.
 
+## Running Integration Tests
+
+To ensure that changes to the Fluentd configuration do not break existing log parsing logic, an integration test suite is provided.
+
+### Prerequisites
+- **Ruby**: The tests use a native Ruby script to simulate the log processing pipeline.
+
+### How to Run
+```bash
+# From the project root
+./tests/integration/run.sh
+```
+
+### Adding New Test Cases
+1. Add a raw log line (in CRI format) to `tests/integration/fixtures/input/<name>.log`.
+2. Run the test script. It will generate a "golden" expected output in `tests/integration/fixtures/output/<name>.json`.
+3. Verify the generated JSON is correct and commit it to the repository.
+
 ## Log Retention (NAS Janitor)
 
 To prevent the NAS storage from filling up over time, this project includes a **Janitor CronJob** that handles automated log rotation.

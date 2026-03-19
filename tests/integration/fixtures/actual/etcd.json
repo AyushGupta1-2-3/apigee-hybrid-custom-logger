@@ -1,0 +1,11 @@
+{
+  "resource": {
+    "namespace": "test-ns",
+    "pod": "test-pod",
+    "container": "test-cont",
+    "node": "test-node"
+  },
+  "message": "etcdserver: compacted raft log at 224686110",
+  "severity": "INFO",
+  "timestamp": "2026-03-18T10:56:10.653Z"
+}
